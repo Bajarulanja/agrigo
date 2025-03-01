@@ -1,0 +1,119 @@
+{% extends "index.html" %}
+{% block content %}
+<div class="container pt-5">
+    <h1 class="text-center" style="color: #8CE17D;">Crop Disease Prediction</h1>
+    <p class="text-center pt-3">Our models provide you an easy, fast, and efficient way to detect diseases in your plants.</p>
+</div>
+
+<form action="{{ url_for('find_crop_disease') }}" method="POST" enctype="multipart/form-data"
+    style="margin-top: 30px; width: 90%; text-align: center; margin: auto;">
+    <div class="container">
+        <!-- Crop Selection -->
+        <div class="row d-flex justify-content-center">
+            <label for="crop-select" class="col-form-label" style="font-weight: bold;">Choose a crop:</label>
+            <div class="col-md-4">
+                <select name="crop" id="crop-select" class="form-control" required>
+                    {% for crop in crops %}
+                    <option value="{{ crop }}">{{ crop }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <br />
+
+        <!-- Image Upload Section -->
+        <div class="row d-flex justify-content-center">
+            <label for="image-upload" class="col-form-label" style="font-weight: bold;">Upload your image:</label>
+            <div class="col-md-4 pt-2">
+                <input class="form-control" name="file" type="file" id="image-upload" accept="image/*"
+                    onchange="preview_image(event)">
+            </div>
+        </div>
+        <br />
+
+        <!-- Webcam Capture Section -->
+        <div class="row d-flex justify-content-center">
+            <label class="col-form-label" style="font-weight: bold;">Or capture from webcam:</label>
+            <div class="col-md-4 pt-2">
+                <video id="video" width="300" height="225" autoplay style="border: 1px solid #ccc; border-radius: 5px;"></video>
+                <br /><br />
+                <button type="button" id="capture-btn" class="btn btn-primary" style="margin-right: 10px;">Capture Image</button>
+                <button type="button" id="retake-btn" class="btn btn-secondary" style="display: none;">Retake Image</button>
+                <br /><br />
+                <canvas id="canvas" width="300" height="225" style="display: none; border: 1px solid #ccc; border-radius: 5px;"></canvas>
+            </div>
+        </div>
+        <br />
+
+        <!-- Display Captured or Uploaded Image -->
+
+
+        <!-- Submit Button -->
+        <div class="row" style="text-align:center;">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-success" value="submit">Predict</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<br />
+<br />
+<br />
+
+<!-- JavaScript for Image Preview and Webcam Capture -->
+<script type="text/javascript">
+    // Image Preview Function
+    function preview_image(event) {
+        var reader = new FileReader();
+        reader.onload = function () {
+            var output = document.getElementById('output-image');
+            output.src = reader.result;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    // Webcam Capture Variables
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture-btn');
+    const retakeBtn = document.getElementById('retake-btn');
+
+    // Access the webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+            video.play();
+        })
+        .catch(err => {
+            alert("Unable to access the webcam.");
+            console.error(err);
+        });
+
+    // Capture image from webcam
+    captureBtn.addEventListener('click', () => {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL('image/png');
+
+        // Hide video and show canvas
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-block';
+
+        // Update the output image with the captured image
+        document.getElementById('output-image').src = dataURL;
+    });
+
+    // Retake image from webcam
+    retakeBtn.addEventListener('click', () => {
+        video.style.display = 'block';
+        canvas.style.display = 'none';
+        captureBtn.style.display = 'inline-block';
+        retakeBtn.style.display = 'none';
+    });
+</script>
+
+<hr>
+{% endblock %}
